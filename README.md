@@ -8,7 +8,7 @@
 | **北大法宝 MCP 协议** | MCP 协议 HTTP | 10 服务 | 推荐 |
 | **北大法宝 CLI 命令行** | CLI 工具 | — | 调试/验证 |
 
-本仓库独立管理 MCP 配置，可与 [codex-legal-cn-skills](https://github.com/laubeing-droid/codex-legal-cn-skills) 配合使用，
+本仓库独立管理 MCP 配置，可与 [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) 配合使用，
 也可单独安装（即使不使用法律技能，也能让 Codex 具备中国法律检索能力）。
 
 ---
@@ -101,6 +101,7 @@ npm 包版本由 GitHub Actions 每周自动监控。
 MIT。上游依赖：
 - chineselaw-mcp（MIT，作者 zooges）
 - @pkulaw/mcp-cli（MIT，北大法宝官方）
+
 
 
 

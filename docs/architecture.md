@@ -61,13 +61,14 @@ update.ps1
 
 ```
 本仓库（配置层）
-  ├── 不依赖 codex-legal-cn-skills（可独立使用）
-  └── 被 codex-legal-cn-skills 的 install.ps1 和 update.ps1 委托调用
+  ├── 不依赖 Claude-for-Legal-CN-to-Codex（可独立使用）
+  └── 被 Claude-for-Legal-CN-to-Codex 的 install.ps1 和 update.ps1 委托调用
 
 外部依赖：
   ├── chineselaw-mcp（npm）     ← 元典智库 API 的 MCP 封装（MIT）
   ├── @pkulaw/mcp-cli（npm）    ← 北大法宝 MCP 命令行工具（MIT）
   └── Node.js >= 18             ← chineselaw 运行时
 ```
+
 
 

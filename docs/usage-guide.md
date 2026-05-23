@@ -128,14 +128,14 @@ npm 包版本:
 
 ---
 
-## 六、与 codex-legal-cn-skills 配合使用
+## 六、与 Claude-for-Legal-CN-to-Codex 配合使用
 
 本仓库可独立使用（仅配置 MCP 连接器），也可与主技能仓库配合：
 
 ```powershell
 # 主仓库安装时会自动克隆本仓库并调用 install.ps1
-git clone https://github.com/laubeing-droid/codex-legal-cn-skills.git
-cd codex-legal-cn-skills
+git clone https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex.git
+cd Claude-for-Legal-CN-to-Codex
 .\install.ps1
 ```
 
@@ -164,5 +164,6 @@ notepad "$env:USERPROFILE\.codex\config.toml"
 # Claude Code
 notepad "$env:USERPROFILE\.claude\settings.json"
 ```
+
 
 
