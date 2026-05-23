@@ -1,5 +1,17 @@
 ﻿# 更新日志
 
+
+## [1.3.0] - 2026-05-23
+
+### 全部文档重写
+- README.md: 全面重写，标题改为"Codex & Claude 中国法律 MCP 连接器"，明确三环境定位
+- QUICKSTART.md: 精简为 60 秒快速入门，新增卸载说明
+- docs/architecture.md: 简化架构图，新增脚本数据流表
+- docs/connectors.md: 完全重写，合并服务清单和配置段到单一参考文档
+- docs/usage-guide.md: 精简为纯粹的使用指南，配置细节委托给 connectors.md
+- docs/troubleshooting.md: 全面更新，覆盖三环境常见问题
+- docs/contributing.md: 移除历史版本记录，聚焦实际开发指引
+- CHANGELOG.md: 追加本版本记录
 ## [1.2.0] - 2026-05-23
 
 ### 泛化为多环境通用安装
@@ -49,4 +61,5 @@
 ### 新增
 - 初始版本：install.ps1, verify.ps1, README.md, docs/connectors.md, npm-monitor.yml
 - 支持 chineselaw（元典智库）+ 北大法宝 MCP 协议 + @pkulaw/mcp-cli
+
 

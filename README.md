@@ -1,21 +1,18 @@
-﻿# Codex 中国法律 MCP 连接器
+﻿# Codex & Claude 中国法律 MCP 连接器
 
-中国法律检索 MCP 连接器配置工具。支持三种方式连接权威法律数据源：
+Codex Desktop / Claude Code / Claude Desktop 三环境通用的中国法律检索 MCP 连接器配置工具。自动检测本机客户端环境，写入对应格式配置（TOML / JSON），一次安装多环境生效。
 
 | 连接器 | 方式 | 工具数 | 推荐 |
 |--------|------|--------|------|
-| **chineselaw（元典智库）** | MCP 协议 stdio | 33 | ⭐ 首选 |
-| **北大法宝 MCP 协议** | MCP 协议 HTTP | 10 服务 | 推荐 |
-| **北大法宝 CLI 命令行** | CLI 工具 | — | 调试/验证 |
+| **chineselaw（元典智库）** | stdio（npx） | 33 | ⭐ 首选 |
+| **北大法宝 MCP 协议** | HTTP（10 服务） | 10+ | 推荐 |
+| **@pkulaw/mcp-cli** | CLI 调试工具 | — | 诊断/验证 |
 
-本仓库独立管理 MCP 配置，可与 [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) 配合使用，
-也可单独安装（即使不使用法律技能，也能让 Codex 具备中国法律检索能力）。
+可与 [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) 配合使用获得完整法律技能工作流，也可单独安装让任意 MCP 客户端具备中国法律检索能力。
 
 ---
 
 ## 快速安装
-
-### Windows (PowerShell)
 
 ```powershell
 git clone https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors.git
@@ -23,87 +20,73 @@ cd Codex-Claude-legal-CN-mcp-connectors
 .\install.ps1
 ```
 
-### macOS / Linux (Bash)
-
+macOS / Linux：
 ```bash
 git clone https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors.git
 cd Codex-Claude-legal-CN-mcp-connectors
 chmod +x install.sh && ./install.sh
 ```
 
-安装脚本会**自动检测本机的 MCP 客户端环境**（Codex Desktop / Claude Code / Claude Desktop），
-将配置写入所有检测到的客户端。**一次安装，多环境生效。**
+安装脚本自动完成：
+1. 检测本机 MCP 客户端（Codex Desktop / Claude Code / Claude Desktop）
+2. 检测 Node.js（chineselaw 前置依赖）
+3. 交互式输入 API Key / Access Token（可留空后续配置）
+4. 选择北大法宝服务（支持多选，如 `1,3,5`）
+5. 写入所有检测到的客户端配置（自动适配 TOML / JSON 格式）
 
-安装流程：
-- 检测 Node.js（chineselaw 前置依赖）
-- 交互式输入 API Key / Access Token（可留空后续手动配置）
-- 选择要安装的北大法宝服务（支持多选）
-- 写入所有检测到的 MCP 客户端配置
+重启 MCP 客户端，运行 `.\verify.ps1` 验证。
 
-重启对应的 MCP 客户端，运行 `.\verify.ps1`（或 `./verify.sh`）验证配置。
-## 文件说明
+---
+
+## 文件清单
 
 | 文件 | 说明 | Windows | macOS/Linux |
 |------|------|---------|-------------|
-| `detect.ps1` / `detect.sh` | 环境检测模块 | ✅ | ✅ |
 | `install.ps1` / `install.sh` | 安装 MCP 连接器（全环境写入） | ✅ | ✅ |
 | `verify.ps1` / `verify.sh` | 验证所有环境的 MCP 配置 | ✅ | ✅ |
 | `update.ps1` / `update.sh` | 自更新 + 版本检查 + Token 过期检测 | ✅ | ✅ |
 | `uninstall.ps1` / `uninstall.sh` | 卸载 MCP 连接器配置 | ✅ | ✅ |
+| `detect.ps1` / `detect.sh` | 环境检测模块（被以上脚本共用） | ✅ | ✅ |
 
 | 文档 | 说明 |
 |------|------|
 | `QUICKSTART.md` | 60 秒快速入门 |
-| `docs/connectors.md` | 连接器配置指南（完整） |
-| `docs/usage-guide.md` | 使用指南 |
-| `docs/architecture.md` | 架构说明 |
+| `docs/connectors.md` | 连接器完整配置参考（含服务清单、配置段、凭证说明） |
+| `docs/usage-guide.md` | 使用指南（安装、验证、更新、配合主仓库） |
+| `docs/architecture.md` | 架构说明 + 数据流 |
 | `docs/troubleshooting.md` | 常见问题排查 |
-| `docs/contributing.md` | 贡献指南 |
+| `docs/contributing.md` | 贡献指南 + 编码规范 |
 
 | 其他 | 说明 |
 |------|------|
-| `.github/workflows/npm-monitor.yml` | npm 包版本监控（每周一） |
-| `.gitattributes` | Git 属性配置 |
+| `.github/workflows/npm-monitor.yml` | npm 包版本监控（每周一 08:00 UTC） |
 | `CHANGELOG.md` | 版本历史 |
+| `交接文档.md` | 维护者交接文档 |
 
-### 支持的环境
+---
+
+## 支持的环境
 
 | 客户端 | 配置路径 | 格式 |
 |--------|---------|------|
 | **Codex Desktop** | `~/.codex/config.toml` | TOML |
-| **Claude Code** | `~/.claude/settings.json` | JSON |
-| **Claude Desktop** | `%LOCALAPPDATA%\Claude\claude_desktop_config.json` (Win)<br>`~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) | JSON |
-## 已知问题与处理
-
-详见 [交接文档](https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors/blob/main/docs/connectors.md#常见问题)。
-
-- **Token 占位符**：install 时如未输入凭证，会写入 `YOUR_API_KEY` / `YOUR_ACCESS_TOKEN`，运行 `update.ps1` 可检测并提示替换
-- **Token 过期**：运行 `update.ps1` 可通过 `@pkulaw/mcp-cli` 验证 Token 有效性
-- **多平台**：Windows PowerShell + macOS/Linux Bash 全部支持
-- **Node.js 依赖**：install 脚本自动检测，未安装时跳过 chineselaw
+| **Claude Code**（终端） | `~/.claude/settings.json` | JSON |
+| **Claude Desktop**（桌面） Win | `%LOCALAPPDATA%\Claude\claude_desktop_config.json` | JSON |
+| **Claude Desktop**（桌面） Mac | `~/Library/Application Support/Claude/claude_desktop_config.json` | JSON |
 
 ---
 
-## 依赖关系
+## 已知问题
 
-```
-chineselaw-mcp (MCP stdio)         ← 基于 zooges/chineselaw-mcp (MIT)
-@pkulaw/mcp-cli (CLI 调试工具)      ← 北大法宝官方 (MIT)
-北大法宝 MCP 协议 (HTTP 10 服务)     ← 北大法宝官方
-```
-
-npm 包版本由 GitHub Actions 每周自动监控。
+- **Token 占位符**：install 时如未输入凭证，写入 `YOUR_API_KEY` / `YOUR_ACCESS_TOKEN`，运行 `update.ps1` 可检测
+- **Token 过期**：`update.ps1` 可借助 `@pkulaw/mcp-cli` 验证 Token 有效性
+- **跨平台**：Windows PowerShell + macOS/Linux Bash 双版本同步
+- **Node.js 依赖**：仅 chineselaw 需要，安装脚本自动检测
 
 ---
 
 ## 许可证
 
 MIT。上游依赖：
-- chineselaw-mcp（MIT，作者 zooges）
-- @pkulaw/mcp-cli（MIT，北大法宝官方）
-
-
-
-
-
-
+- [chineselaw-mcp](https://www.npmjs.com/package/chineselaw-mcp)（MIT，作者 zooges）
+- [@pkulaw/mcp-cli](https://www.npmjs.com/package/@pkulaw/mcp-cli)（MIT，北大法宝官方）

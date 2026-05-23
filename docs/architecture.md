@@ -2,73 +2,54 @@
 
 ## 仓库定位
 
-`Codex-Claude-legal-CN-mcp-connectors` 是一个**独立的 MCP 连接器配置仓库**，
-不涉及 skills/ 或法律工作流内容，只负责一件事：
+独立的 MCP 连接器配置仓库。只做一件事：
 
-> **向 MCP 客户端的配置文件写入中国法律检索连接器的配置**
+> **向本机所有 MCP 客户端的配置文件写入中国法律检索连接器**
 
-## 架构图
+## 架构流
 
 ```
 用户运行 install.ps1 / install.sh
          │
          ▼
-检测本机 MCP 客户端环境（detect.ps1 / detect.sh）
+  detect.ps1 / detect.sh —— 自动检测本机 MCP 客户端
          │
-         ├── Codex Desktop     →  ~/.codex/config.toml          (TOML)
-         ├── Claude Code       →  ~/.claude/settings.json       (JSON)
-         └── Claude Desktop    →  %APPDATA%/Claude/...          (JSON)
-         │
-         ▼
-交互式选择连接器 + 输入凭证
-         │
-         ├── chineselaw（stdio）→ command/args/env
-         └── 北大法宝（HTTP）   → url/headers
+         ├── Codex Desktop      → ~/.codex/config.toml             (TOML)
+         ├── Claude Code        → ~/.claude/settings.json          (JSON)
+         └── Claude Desktop     → %APPDATA%/Claude/... 或 ~/Library/... (JSON)
          │
          ▼
-自动适配格式写入所有检测到的客户端
+  交互式选择连接器 + 输入凭证
+         │
+         ├── chineselaw（stdio）→ 写入 command/args/env
+         └── 北大法宝（HTTP）   → 写入 url/http_headers
          │
          ▼
-验证（verify.ps1） / 更新诊断（update.ps1）
+  自动适配 TOML/JSON 格式，写入所有检测到的客户端
+         │
+         ▼
+  verify.ps1（验证） / update.ps1（更新诊断）
 ```
 
-## 数据流
+## 脚本数据流
 
-```
-install.ps1
-  1. Node.js 检测（chineselaw 前置依赖）
-  2. 交互式输入 API Key / Access Token（可留空）
-  3. 选择北大法宝服务（多选）
-  4. 写入所有检测到的 MCP 客户端配置
-  5. 提示后续步骤
-
-verify.ps1
-  1. 检测所有 MCP 客户端环境
-  2. 解析每个环境配置文件的 MCP 连接器段
-  3. 检查 enabled 状态和占位符
-  4. 检查 npm 包版本
-  5. 输出验证结果
-
-update.ps1
-  1. git pull 自更新
-  2. npm 包版本检查（chineselaw-mcp / @pkulaw/mcp-cli）
-  3. 全环境 MCP 配置检查
-  4. 凭证过期检测（占位符 + pkulaw-mcp-cli 验证）
-  5. 汇总
-```
+| 脚本 | 流程 |
+|------|------|
+| **install.ps1** | 环境检测 → Node.js 检查 → 输入凭证 → 选择服务 → 写入所有客户端配置 |
+| **verify.ps1** | 环境检测 → 解析各客户端 MCP 段 → 检查 enabled/占位符 → 检查 npm 包版本 |
+| **update.ps1** | git pull 自更新 → npm 版本检查 → 全环境 MCP 配置检查 → 凭证过期检测 → 汇总 |
+| **uninstall.ps1** | 环境检测 → 从所有客户端配置移除 MCP 段 |
+| **detect.ps1/sh** | 被以上脚本共用，检测本机是否安装各客户端并返回配置路径 |
 
 ## 依赖关系
 
 ```
 本仓库（配置层）
-  ├── 不依赖 Claude-for-Legal-CN-to-Codex（可独立使用）
-  └── 被 Claude-for-Legal-CN-to-Codex 的 install.ps1 和 update.ps1 委托调用
+  ├── 不依赖上游仓库（可独立使用）
+  └── 被上游仓库的 install.ps1 / update.ps1 委托调用
 
 外部依赖：
-  ├── chineselaw-mcp（npm）     ← 元典智库 API 的 MCP 封装（MIT）
-  ├── @pkulaw/mcp-cli（npm）    ← 北大法宝 MCP 命令行工具（MIT）
-  └── Node.js >= 18             ← chineselaw 运行时
+  ├── chineselaw-mcp（npm）     —— 元典智库 MCP 封装（MIT，zooges）
+  ├── @pkulaw/mcp-cli（npm）    —— 北大法宝 CLI 工具（MIT，北大法宝官方）
+  └── Node.js >= 18             —— chineselaw 运行环境
 ```
-
-
-

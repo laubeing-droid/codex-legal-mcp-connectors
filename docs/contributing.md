@@ -1,66 +1,80 @@
 ﻿# 贡献指南
 
-## 仓库结构
+## 开发环境
 
 ```
 Codex-Claude-legal-CN-mcp-connectors/
-  README.md                 独立说明 + 快速配置
-  QUICKSTART.md             60秒快速入门
-  CHANGELOG.md              版本历史
-  LICENSE                   许可证
-  .gitattributes            Git 属性
-
-  install.ps1 / install.sh  通用安装脚本
-  verify.ps1 / verify.sh    通用验证脚本
-  update.ps1 / update.sh    通用更新诊断脚本
-  uninstall.ps1 / uninstall.sh  卸载脚本（移除 MCP 配置）
-  detect.ps1 / detect.sh    环境检测模块
-
-  docs/
-    architecture.md          架构说明
-    connectors.md            连接器配置指南（完整）
-    usage-guide.md           使用指南
-    troubleshooting.md       常见问题排查
-    contributing.md          本文件
-
-  .github/workflows/
-    npm-monitor.yml          每周检查 chineselaw-mcp / @pkulaw/mcp-cli 版本
+├── README.md                 仓库主页
+├── QUICKSTART.md             快速入门
+├── CHANGELOG.md              版本历史
+├── LICENSE                   MIT 许可证
+├── .gitattributes            Git 行尾配置
+├── .gitignore                忽略模式
+│
+├── install.ps1 / install.sh  安装脚本（全环境写入）
+├── verify.ps1 / verify.sh    验证脚本
+├── update.ps1 / update.sh    更新诊断脚本
+├── uninstall.ps1 / uninstall.sh  卸载脚本
+├── detect.ps1 / detect.sh    环境检测模块
+│
+├── docs/
+│   ├── connectors.md         连接器配置参考
+│   ├── usage-guide.md        使用指南
+│   ├── architecture.md       架构说明
+│   ├── troubleshooting.md    常见问题排查
+│   └── contributing.md       本文件
+│
+└── .github/workflows/
+    └── npm-monitor.yml       npm 包版本监控
 ```
 
 ## 修改脚本注意事项
 
-### 格式适配
+### 新增连接器
+需要同步修改以下位置：
+1. **PS1 版本**：`install.ps1` 中的 `Write-McpToCodex`（TOML）和 `Write-McpToClaude`（JSON）调用
+2. **Bash 版本**：`install.sh` 中的对应逻辑
+3. **检测模块**：`detect.ps1` / `detect.sh` 如需支持新客户端
+4. **docs**：connectors.md 新增服务清单，usage-guide.md 补充说明
 
-当新增连接器或修改配置格式时，需要同时更新：
-- **TOML 格式**（Codex）：`install.ps1` 中的 `Write-McpToCodex` 调用
-- **JSON 格式**（Claude）：`install.ps1` 中的 `Write-McpToClaude` 调用
-- **bash 版本**：`install.sh` 中的对应逻辑
+### 跨平台同步
+- 修改 `.ps1` 后必须同步修改 `.sh`
+- 两种脚本逻辑保持对等，差异仅限语法层面（PowerShell vs Bash）
+- 行尾由 `.gitattributes` 控制：PS1/MD→LF，无需手动处理
 
 ### 凭证安全
-
-- Token 和 API Key 通过 `Read-Host` 交互式输入，不写入终端历史
+- Token / API Key 通过 `Read-Host` 交互式输入，不写入终端历史
 - 永远不要将真实 Token 提交到 Git
-- config.toml 和 settings.json 中的占位符（YOUR_API_KEY / YOUR_ACCESS_TOKEN）需要在文档和脚本中明确提示替换
+- 占位符（`YOUR_API_KEY` / `YOUR_ACCESS_TOKEN`）需在脚本和文档中明确提示
 
 ### 测试变更
-
-1. 运行 `.\install.ps1` 测试交互式安装
-2. 运行 `.\verify.ps1` 测试验证逻辑
-3. 运行 `.\update.ps1` 测试诊断逻辑
-4. PowerShell 语法检查：`[System.Management.Automation.Language.Parser]::ParseInput(...)`
+```powershell
+.\install.ps1     # 测试交互式安装
+.\verify.ps1      # 测试验证逻辑
+.\update.ps1      # 测试诊断逻辑
+.\uninstall.ps1   # 测试卸载逻辑
+```
+建议在 Windows + macOS/Linux 双平台测试。
 
 ### 编码规范
-
-- PowerShell 脚本使用 UTF8 编码
-- Bash 脚本使用 UTF8 编码
-- Markdown 文档使用 UTF8 编码
-- 行尾：PowerShell 使用 CRLF，Bash 使用 LF（由 .gitattributes 控制）
+- 所有文件使用 UTF-8 编码
+- PowerShell 使用 CRLF，Bash 使用 LF
+- 文档使用 Markdown 格式
 
 ## 版本号规则
 
-- v1.x：初始版本（Codex 仅 TOML）
-- v1.1.x：新增脚本（update.ps1, install.sh 等）
-- v1.2.x：多环境支持（detect 模块 + Claude JSON 格式）
-- 重大变更升级主版本号
+遵循语义化版本 `vMAJOR.MINOR.PATCH`：
+- **MAJOR**：破坏性变更（脚本参数不兼容、配置文件格式变更）
+- **MINOR**：新增功能（新服务、新环境支持、新脚本）
+- **PATCH**：Bug 修复、文档更新、配置调整
 
+发版步骤：
+1. 更新 `CHANGELOG.md`
+2. `git tag vX.Y.Z && git push origin vX.Y.Z`
 
+## PR 流程
+
+1. Fork 本仓库
+2. 创建功能分支
+3. 修改并测试
+4. 提交 PR 到 main 分支
