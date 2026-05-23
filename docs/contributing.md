@@ -3,7 +3,7 @@
 ## 仓库结构
 
 ```
-codex-legal-mcp-connectors/
+Codex-Claude-legal-CN-mcp-connectors/
   README.md                 独立说明 + 快速配置
   QUICKSTART.md             60秒快速入门
   CHANGELOG.md              版本历史

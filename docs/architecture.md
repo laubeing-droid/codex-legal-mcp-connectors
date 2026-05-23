@@ -2,7 +2,7 @@
 
 ## 仓库定位
 
-`codex-legal-mcp-connectors` 是一个**独立的 MCP 连接器配置仓库**，
+`Codex-Claude-legal-CN-mcp-connectors` 是一个**独立的 MCP 连接器配置仓库**，
 不涉及 skills/ 或法律工作流内容，只负责一件事：
 
 > **向 MCP 客户端的配置文件写入中国法律检索连接器的配置**
@@ -61,8 +61,8 @@ update.ps1
 
 ```
 本仓库（配置层）
-  ├── 不依赖 codex-legal-cn-skills（可独立使用）
-  └── 被 codex-legal-cn-skills 的 install.ps1 和 update.ps1 委托调用
+  ├── 不依赖 Claude-for-Legal-CN-to-Codex（可独立使用）
+  └── 被 Claude-for-Legal-CN-to-Codex 的 install.ps1 和 update.ps1 委托调用
 
 外部依赖：
   ├── chineselaw-mcp（npm）     ← 元典智库 API 的 MCP 封装（MIT）
