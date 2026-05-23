@@ -31,27 +31,36 @@ cd codex-legal-mcp-connectors
 chmod +x install.sh && ./install.sh
 ```
 
-安装脚本会：
+安装脚本会**自动检测本机的 MCP 客户端环境**（Codex Desktop / Claude Code / Claude Desktop），
+将配置写入所有检测到的客户端。**一次安装，多环境生效。**
+
+安装流程：
 - 检测 Node.js（chineselaw 前置依赖）
-- 交互式输入 API Key / Access Token（也可留空后续手动配置）
+- 交互式输入 API Key / Access Token（可留空后续手动配置）
 - 选择要安装的北大法宝服务（支持多选）
+- 写入所有检测到的 MCP 客户端配置
 
-重启 Codex Desktop，运行 `.\verify.ps1`（或 `./verify.sh`）验证配置。
-
----
-
+重启对应的 MCP 客户端，运行 `.\verify.ps1`（或 `./verify.sh`）验证配置。
 ## 文件说明
 
 | 文件 | 说明 | Windows | macOS/Linux |
 |------|------|---------|-------------|
-| install.ps1 / install.sh | 安装 MCP 连接器（交互式） | ✅ | ✅ |
-| verify.ps1 / verify.sh | 验证 MCP 配置状态 | ✅ | ✅ |
-| update.ps1 / update.sh | 自更新 + 版本检查 + Token 过期检测 | ✅ | ✅ |
-| docs/connectors.md | 完整配置指南（含工具列表） | — | — |
-| .github/workflows/npm-monitor.yml | npm 包版本监控（每周一） | — | — |
+| `detect.ps1` / `detect.sh` | 环境检测模块（自动发现 MCP 客户端） | ✅ | ✅ |
+| `install.ps1` / `install.sh` | 安装 MCP 连接器（全环境写入） | ✅ | ✅ |
+| `verify.ps1` / `verify.sh` | 验证所有环境的 MCP 配置 | ✅ | ✅ |
+| `update.ps1` / `update.sh` | 自更新 + 版本检查 + Token 过期检测 | ✅ | ✅ |
+| `docs/connectors.md` | 完整配置指南（含工具列表） | — | — |
+| `.github/workflows/npm-monitor.yml` | npm 包版本监控（每周一） | — | — |
 
----
+### 支持的环境
 
+| 客户端 | 配置路径 | 格式 |
+|--------|---------|------|
+| **Codex Desktop** | `~/.codex/config.toml` | TOML |
+| **Claude Code** | `~/.claude/settings.json` | JSON |
+| **Claude Desktop** | `%LOCALAPPDATA%\Claude\claude_desktop_config.json` (Win)<br>`~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) | JSON |
+
+安装/验证/更新脚本自动操作所有检测到的环境，无需用户手动指定。
 ## 已知问题与处理
 
 详见 [交接文档](https://github.com/laubeing-droid/codex-legal-mcp-connectors/blob/main/docs/connectors.md#常见问题)。
@@ -80,3 +89,5 @@ npm 包版本由 GitHub Actions 每周自动监控。
 MIT。上游依赖：
 - chineselaw-mcp（MIT，作者 zooges）
 - @pkulaw/mcp-cli（MIT，北大法宝官方）
+
+
