@@ -5,15 +5,15 @@
 ## 安装
 
 ```powershell
-git clone https://github.com/laubeing-droid/codex-legal-mcp-connectors.git
-cd codex-legal-mcp-connectors
+git clone https://github.com/laubeing-droid/Codex-Claude-legal-cn-mcp-connectors.git
+cd Codex-Claude-legal-cn-mcp-connectors
 .\install.ps1
 ```
 
 macOS/Linux：
 ```bash
-git clone https://github.com/laubeing-droid/codex-legal-mcp-connectors.git
-cd codex-legal-mcp-connectors
+git clone https://github.com/laubeing-droid/Codex-Claude-legal-cn-mcp-connectors.git
+cd Codex-Claude-legal-cn-mcp-connectors
 chmod +x install.sh && ./install.sh
 ```
 
@@ -39,3 +39,4 @@ chmod +x install.sh && ./install.sh
 - 重启 Codex Desktop / Claude Code
 - 运行 `.\update.ps1` 查看诊断
 - 查看 `docs/troubleshooting.md`
+
