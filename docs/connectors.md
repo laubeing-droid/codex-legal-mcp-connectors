@@ -1,83 +1,21 @@
-﻿# MCP 连接器配置指南
+﻿# 连接器配置指南
 
-本仓库为 Codex Desktop 配置中国法律 MCP 连接器。支持 Windows（PowerShell）和 macOS/Linux（Bash）。
-
-安装后重启 Codex Desktop 即可使用。配置存储在 `~/.codex/config.toml` 的 `[mcp_servers]` 段。
+安装后重启 Codex Desktop 即可使用。配置存储在 `~/.codex/config.toml`。
 
 ---
 
-## 一、连接器总览
-
-| 连接器 | 类型 | 工具数 | 推荐 |
-|--------|------|--------|------|
-| **chineselaw（元典智库）** | stdio（npx） | 33 | ⭐ 首选 |
-| **北大法宝 MCP 协议** | HTTP（10 服务） | 10+ | 推荐 |
-| **北大法宝 CLI 命令行** | 调试工具 | — | 诊断/验证 |
-
-chineselaw 和北大法宝**二选一即可**，不需要两个都配。
-
-### 配套文档
-
-| 文档 | 内容 |
-|------|------|
-| **本文件** | 安装 + 配置 + 服务详表 |
-| [usage-guide.md](usage-guide.md) | 完整使用指南、调试、配合主仓库使用 |
-| [architecture.md](architecture.md) | 架构说明、数据流、依赖关系 |
-| [troubleshooting.md](troubleshooting.md) | 常见问题排查 |
-| [contributing.md](contributing.md) | 贡献指南、编码规范 |
-## 二、安装
-
-安装脚本自动**检测本机 MCP 客户端环境**，写入所有检测到的客户端配置：
-
-| 客户端 | 配置路径 | 格式 | 自动检测 |
-|--------|---------|------|---------|
-| **Codex Desktop** | `~/.codex/config.toml` | TOML | ✅ |
-| **Claude Code** (终端) | `~/.claude/settings.json` | JSON | ✅ |
-| **Claude Desktop** (桌面) | `%LOCALAPPDATA%\Claude\claude_desktop_config.json` (Win)<br>`~/Library/Application Support/Claude/claude_desktop_config.json` (Mac) | JSON | ✅ |
-
-无论你使用哪种客户端，安装脚本都会检测并配置。**一次安装，多环境生效。**
-
-### Windows（PowerShell）
-
-```powershell
-git clone https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors.git
-cd Codex-Claude-legal-CN-mcp-connectors
-.\install.ps1
-```
-
-### macOS / Linux（Bash）
-
-```bash
-git clone https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors.git
-cd Codex-Claude-legal-CN-mcp-connectors
-chmod +x install.sh && ./install.sh
-```
-
-安装脚本会：
-1. **环境检测**：自动发现本机已安装的 MCP 客户端
-2. **前置检查**：检测 Node.js（chineselaw 依赖）
-3. **交互式配置**：提示输入 API Key / Access Token（可留空后续配置）
-4. **服务选择**：北大法宝 10 个服务可选安装，支持多选（如 `1,3,5`）或全部
-5. **多环境写入**：每个选中的服务写入所有检测到的客户端配置（自动适配 TOML/JSON 格式）
-6. **智能追加**：不覆盖已有配置，仅添加新条目
-## 三、chineselaw（元典智库）— 首选
+## 一、chineselaw（元典智库）— 首选
 
 基于 [chineselaw-mcp](https://www.npmjs.com/package/chineselaw-mcp)（MIT），将元典智库 API 封装为 MCP 工具。
 
 ### 前置条件
-- **Node.js >= 18**。从 https://nodejs.org 下载 LTS 版本。安装脚本会自动检测。
+- **Node.js >= 18**。下载 https://nodejs.org（LTS 版本）
 
 ### 注册获取 API Key
 1. 打开 https://open.chineselaw.com → 注册
 2. 个人中心 → API 管理 → 创建 API Key
 
-### 手动配置
-
-```powershell
-notepad "$env:USERPROFILE\.codex\config.toml"
-```
-
-找到 `[mcp_servers.chineselaw.env]`，将 `CHINESELAW_API_KEY` 替换为真实 Key：
+### 配置示例（`~/.codex/config.toml`）
 
 ```toml
 [mcp_servers.chineselaw]
@@ -93,186 +31,66 @@ CHINESELAW_API_KEY = "你的真实API Key"    # ← 替换
 
 ### 可用工具（33 个）
 
-**法律法规（5）**：search_regulations, search_legal_articles, get_article_detail, get_regulation_detail, semantic_search_law
-
-**案例文书（4）**：search_cases, search_authoritative_cases, get_case_detail, semantic_search_cases
-
-**企业信息（24）**：企业检索、工商信息、商标专利、涉诉信息、失信被执行人、行政处罚等
+| 类别 | 数量 | 工具 |
+|------|:----:|------|
+| 法律法规 | 5 | search_regulations, search_legal_articles, get_article_detail, get_regulation_detail, semantic_search_law |
+| 案例文书 | 4 | search_cases, search_authoritative_cases, get_case_detail, semantic_search_cases |
+| 企业信息 | 24 | 企业检索、工商信息、商标专利、涉诉信息、失信被执行人、行政处罚等 |
 
 ---
 
-## 四、北大法宝 MCP 协议
+## 二、北大法宝 MCP 协议
 
-10 个独立 HTTP MCP 服务。官方中文名称及说明来自北大法宝 MCP 服务平台。
+### 注册获取 Token
+1. 打开 https://mcp.pkulaw.com → 注册
+2. 开发者控制台 → 创建 Access Token
 
-### 注册获取 Access Token
-1. 打开 https://mcp.pkulaw.com → 注册/登录
-2. 开发者控制台 → 我的应用 → 创建应用 → 获取 Access Token
+### 10 个服务详情
 
-### 手动配置
+| # | 配置段名 | 中文名 | 用途 |
+|---|---------|--------|------|
+| 1 | pkulaw-law-search | 检索法律法规-语义 | 基于语义理解的法规检索 |
+| 2 | pkulaw-law-keyword | 检索法律法规-关键词 | 标题或正文关键词检索 |
+| 3 | pkulaw-case-semantic-search | 检索司法案例-语义 | 自然语言查找判例 |
+| 4 | pkulaw-case-keyword | 检索司法案例-关键词 | 案例检索 |
+| 5 | pkulaw-law-item-keyword | 精准查找法条-关键词 | 按名称与条号查法条 |
+| 6 | pkulaw-law-recognition | 法条识别与溯源 | 识别法规名称与条款 |
+| 7 | pkulaw-case-number-recognition | 案号识别与溯源 | 识别案号并溯源 |
+| 8 | pkulaw-citation-validator | 修正生成幻觉-法条 | 返回权威条文纠正幻觉 |
+| 9 | pkulaw-doc-link | 法宝超链 | 文本添加法规超链接 |
+| 10 | pkulaw-semantic-nlsql | 法宝语义检索（NL-SQL） | 多库语义检索（需额外购买） |
 
-打开 config.toml，将所有 `pkulaw-*` 段中的 `YOUR_ACCESS_TOKEN` 替换为真实 Token：
+### 配置示例
 
 ```toml
 [mcp_servers.pkulaw-law-search]
 url = "https://apim-gateway.pkulaw.com/mcp-law-search-service"
-http_headers = { Authorization = "Bearer YOUR_ACCESS_TOKEN" }   # ← 替换
+http_headers = { Authorization = "Bearer YOUR_ACCESS_TOKEN" }
 startup_timeout_sec = 30
 tool_timeout_sec = 600
 enabled = true
 ```
 
-### 10 个服务详情
-
-| # | 配置段名 | 官方中文名 | 用途说明 |
-|---|---------|-----------|---------|
-| 1 | pkulaw-law-search | **检索法律法规-语义** | 基于语义理解的法律法规检索与相关文章查找 |
-| 2 | pkulaw-law-keyword | **检索法律法规-关键词** | 法规标题或正文关键词精确匹配检索 |
-| 3 | pkulaw-case-semantic-search | **检索司法案例-语义** | 用自然语言描述查找相关判例 |
-| 4 | pkulaw-case-keyword | **检索司法案例-关键词** | 案例标题或正文关键词检索 |
-| 5 | pkulaw-law-item-keyword | **精准查找法条-关键词** | 通过法规名称与条号精确查询法条内容 |
-| 6 | pkulaw-law-recognition | **法条识别与溯源** | 从文本中识别法规名称与条款，返回来源链接 |
-| 7 | pkulaw-case-number-recognition | **案号识别与溯源** | 识别案号、标准化验证及与案例库溯源 |
-| 8 | pkulaw-citation-validator | **修正生成幻觉-法条** | 分析引用并返回权威条文，修正引用幻觉 |
-| 9 | pkulaw-doc-link | **法宝超链** | 为文本智能添加法规超链接指向北大法宝文档 |
-| 10 | pkulaw-semantic-nlsql | **法宝语义检索（NL-SQL）** | 自然语言在多库中语义检索（需额外购买配置） |
+其他 9 个服务同理，替换 URL 和段名。
 
 ---
 
-## 五、使用 pkulaw-mcp-cli 验证配置
+## 三、使用 pkulaw-mcp-cli 验证
 
-基于 [@pkulaw/mcp-cli](https://www.npmjs.com/package/@pkulaw/mcp-cli)（北大法宝官方，MIT），用于诊断 Token 有效性。
-
-### 安装与初始化
+基于 [@pkulaw/mcp-cli](https://www.npmjs.com/package/@pkulaw/mcp-cli)（北大法宝官方，MIT），用于诊断。
 
 ```bash
 npm install -g @pkulaw/mcp-cli
 pkulaw-mcp init --authorization "Bearer YOUR_ACCESS_TOKEN"
-```
-
-### 验证流程
-
-```bash
+pkulaw-mcp update          # 拉取工具列表
+pkulaw-mcp tools           # 列出可用工具
 pkulaw-mcp check           # 检查配置完整性
-pkulaw-mcp update          # 拉取工具列表，确认 Token 有效
-pkulaw-mcp tools           # 列出已订阅服务的可用工具
-pkulaw-mcp doctor          # 别名，与 check 相同
-```
-
-### 调用示例
-
-```bash
-pkulaw-mcp law-keyword search_regulations --searchKey "民法典 合同无效"
-pkulaw-mcp law-semantic semantic_search_law --searchKey "民间借贷利率"
-pkulaw-mcp citation-validator validate_citation --citation "民法典第二条"
-pkulaw-mcp case-keyword search_cases --searchKey "股权转让纠纷"
-```
-
-### 查看服务文档
-
-```bash
-pkulaw-mcp docs                                # 列出所有服务的文档链接
-pkulaw-mcp docs law-keyword --open             # 用浏览器打开指定服务文档
 ```
 
 ---
 
-## 六、脚本参考
+## 四、凭证安全
 
-| 脚本 | Windows | macOS/Linux | 功能 |
-|------|---------|-------------|------|
-| `detect.ps1` / `detect.sh` | ✅ | ✅ | 环境检测模块（被其他脚本引用） |
-| `install.ps1` / `install.sh` | ✅ | ✅ | 安装 MCP 连接器（全环境写入） |
-| `verify.ps1` / `verify.sh` | ✅ | ✅ | 验证所有环境的 MCP 配置 |
-| `update.ps1` / `update.sh` | ✅ | ✅ | 自更新 + 全环境诊断 |
-
-### detect —— 环境检测模块
-
-自动检测本机安装的 MCP 客户端，返回各环境的配置路径和格式。
-被 install/verify/update 脚本自动引用，无需手动调用。
-
-### install —— 通用安装
-
-检测所有 MCP 客户端环境 → 交互式选择连接器和服务 → 写入所有环境。
-
-```powershell
-.\install.ps1           # Windows
-./install.sh            # macOS/Linux
-```
-
-### verify —— 全环境验证
-
-检查所有检测到的客户端配置，包括：
-- 每个环境的 MCP 连接器列表
-- 各连接器启用状态（TOML）或配置完整性（JSON）
-- Token / API Key 是否为占位符
-- npm 包最新版本
-- @pkulaw/mcp-cli 安装状态
-
-```powershell
-.\verify.ps1           # Windows
-./verify.sh            # macOS/Linux
-```
-
-### update —— 全环境更新与诊断
-
-5 步全面诊断，覆盖所有环境：
-1. **自更新**：`git pull` 同步本仓库最新版本
-2. **npm 版本检查**：检测 chineselaw-mcp / @pkulaw/mcp-cli
-3. **全环境 MCP 配置检查**：动态发现所有配置段
-4. **凭证检测**：检测所有环境的占位符；如有 pkulaw-mcp-cli 则验证 Token 有效性
-5. **汇总**：列出所有检测到的客户端及配置路径
-
-```powershell
-.\update.ps1           # Windows
-./update.sh            # macOS/Linux
-```
-## 七、故障排除
-
-### 连接器不生效？
-1. 确认 config.toml 中 `enabled = true` 存在
-2. 运行 `verify.ps1` 检查配置状态
-3. 确认已重启 Codex Desktop
-4. 运行 `update.ps1` 获取完整诊断
-
-### chineselaw npx 错误？
-- `node --version` 确认 >= 18
-- 从 https://nodejs.org 下载 LTS 版本
-- 运行 `update.ps1` 检查 npm 包版本
-
-### Token 无效或过期？
-- 运行 `update.ps1` 自动检测 Token 是否仍为占位符
-- 安装 pkulaw-mcp-cli 后，update 脚本自动验证 Token 有效性
-- 登录 https://mcp.pkulaw.com 重新生成 Token
-
-### config.toml 损坏？
-- 重新运行 `install.ps1`（只添加不覆盖已有配置）
-- 或手动编辑 `~/.codex/config.toml`
-
-### 无连接器也能用吗？
-可以。技能仍可用，但法规引用将标注 `[需验证]`，
-不保证法条和案例的现行有效性。
-
----
-
-## 八、凭证安全
-
-- Token 和 API Key 存储在 `~/.codex/config.toml` 中
+- Token 和 API Key 存储在客户端配置文件中
+- 切勿提交含凭证的配置文件到 Git
 - 安装时交互式输入，不保留在终端历史
-- 如使用 `pkulaw-mcp-cli`，Token 存储在 `~/.pkulaw/mcp/config.json`
-- 切勿将含 Token 的配置文件提交到 Git
-
----
-
-## 九、相关链接
-
-- 本仓库：https://github.com/laubeing-droid/Codex-Claude-legal-CN-mcp-connectors
-- 主技能仓库：https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex
-- chineselaw-mcp（npm）：https://www.npmjs.com/package/chineselaw-mcp
-- @pkulaw/mcp-cli（npm）：https://www.npmjs.com/package/@pkulaw/mcp-cli
-- 元典智库开放平台：https://open.chineselaw.com
-- 北大法宝 MCP 平台：https://mcp.pkulaw.com
-- 北大法宝 MCP 文档：https://mcp.pkulaw.com/docs
-
-
-
