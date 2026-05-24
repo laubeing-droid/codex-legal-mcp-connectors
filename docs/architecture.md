@@ -60,9 +60,11 @@
 
 ## 自建 MCP Server 架构
 
+来源：[moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools)
+
 ```
 servers/
-├── flk-npc/              # 国家法规库（flk-npc）
+├── flk-npc/              # 国家法规库（flk-npc）（源自 moyupeng0422/legal-tools）
 │   ├── server.py          # MCP 协议主服务
 │   ├── client.py          # 请求封装
 │   ├── models.py          # 数据模型
@@ -73,7 +75,7 @@ servers/
 │   ├── start.bat          # Windows 启动
 │   └── references/        # API 参考文档
 │
-└── rmfyalk/              # 案例库（人民法院案例库）
+└── rmfyalk/              # 案例库（人民法院案例库）（源自 moyupeng0422/legal-tools）
     ├── server.py          # MCP 协议主服务
     ├── client.py          # 请求封装
     ├── models.py          # 数据模型
