@@ -13,8 +13,6 @@ Codex Desktop / Claude Code / Claude Desktop 三端通用的中国法律 MCP 连
 | **元典智库 （chineselaw）** | REST API 直调 | 36 接口 | API Key （X-API-Key） | 深度集成 |
 | **北大法宝 （pkulaw）** | HTTP MCP | 10+ 服务 | Access Token | ⭐ 推荐 |
 | **飞书 （LarkSuite）** | npm stdio | 文档/消息/日历 | App ID + Secret | 推荐 |
-| **国家法规库 （flk-npc）** | Python 自托管（源自 [moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools)） | 法规检索 | 免费无鉴权 | 可选 |
-| **案例库 （rmfyalk）** | Python 自托管（源自 [moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools)） | 案例检索 | Cookie Token | 可选 |
 
 可配合 [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) 获取完整法律技能工作流，亦可单独安装给任意 MCP 客户端使用。
 
@@ -56,7 +54,6 @@ chmod +x install.sh && ./install.sh
 │   └── contributing.md              # 贡献指南
 ├── .github/workflows/
 │   ├── npm-monitor.yml              # npm 包版本监控
-│   └── upstream-moyupeng.yml        # moyupeng 上游同步
 ├── QUICKSTART.md                    # 60 秒快速入门
 ├── CHANGELOG.md                     # 版本历史
 └── 交接文档.md                      # 维护者手册

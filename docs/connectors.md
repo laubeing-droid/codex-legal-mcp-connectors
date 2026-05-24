@@ -209,11 +209,9 @@ enabled = true
 | 项目 | 内容 |
 |------|------|
 | 目录 | `servers/flk-npc/` |
-| 来源 | [moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools)（API 文档参考，代码为干净室重写） |
 | 数据源 | 国家法律法规数据库（flk.npc.gov.cn） |
 | 鉴权 | **免费，无需鉴权** |
 | 端口 | `localhost:18062` |
-| 实现 | 单文件 `scripts/server.py`（含 client / models / formatters） |
 
 **启动：**
 ```bash
@@ -235,11 +233,9 @@ enabled = true
 | 项目 | 内容 |
 |------|------|
 | 目录 | `servers/rmfyalk/` |
-| 来源 | [moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools)（API 文档参考，代码为干净室重写） |
 | 数据源 | 人民法院案例库（rmfyalk.court.gov.cn） |
 | 鉴权 | Cookie Token（需从浏览器获取） |
 | 端口 | `localhost:18061` |
-| 实现 | 单文件 `scripts/server.py`（含 client / models / formatters） |
 
 **启动：**
 ```bash

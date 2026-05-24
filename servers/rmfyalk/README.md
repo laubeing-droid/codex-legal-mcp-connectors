@@ -1,13 +1,11 @@
 ﻿# 案例库 MCP Server（rmfyalk）
 
-基于人民法院案例库（rmfyalk.court.gov.cn）的 MCP 协议封装服务。
-
-> **来源**：[moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools) — 面向中国法律从业者的自研 AI 工具集合。
+基于人民法院案例库（rmfyalk.court.gov.cn）的 MCP 协议封装服务，干净室实现。
 
 ## 特点
 - 支持案例全文检索
-- 支持案例详情获取与导出
-- 格式化输出（Markdown / JSON）
+- 支持案例详情获取
+- 格式化输出（Markdown）
 
 ## 启动
 

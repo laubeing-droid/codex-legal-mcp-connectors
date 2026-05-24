@@ -1,8 +1,6 @@
 ﻿# 国家法规库 MCP Server（flk-npc）
 
-基于国家法律法规数据库（flk.npc.gov.cn）的 MCP 协议封装服务。
-
-> **来源**：[moyupeng0422/legal-tools](https://github.com/moyupeng0422/legal-tools) — 面向中国法律从业者的自研 AI 工具集合。
+基于国家法律法规数据库（flk.npc.gov.cn）的 MCP 协议封装服务，干净室实现。
 
 ## 特点
 - 免费，无需 API Key

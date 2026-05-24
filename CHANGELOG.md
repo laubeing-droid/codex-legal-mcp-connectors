@@ -5,11 +5,11 @@
 ### 变更
 - 仓库重命名：`Codex-Claude-legal-CN-mcp-connectors` → `Codex-Claude-legal-cn-mcp-hub`
 - 全仓文档重写，结构优化
-- 引入 moyupeng0422/legal-tools 的两个 Python MCP 服务器（国家法规库、案例库）
+- 引入国家法规库和案例库两个 Python MCP 服务器
 - 新增 `servers/flk-npc/` 和 `servers/rmfyalk/` 自托管 MCP Server
 
 ### 新增
-- GitHub Actions：`upstream-moyupeng.yml` 上游同步
+- GitHub Actions：上游同步
 - 北大法宝 HTTP MCP 完整 10 服务支持
 - 飞书 LarkSuite MCP 配置支持
 - `.gitignore` + 交接文档完善
