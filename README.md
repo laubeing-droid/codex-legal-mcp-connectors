@@ -24,13 +24,23 @@ Codex Desktop / Claude Code / Claude Desktop 三端通用的中国法律 MCP 连
 
 ## 快速开始
 
+**Windows:**
+
 ```powershell
 git clone https://github.com/laubeing-droid/Codex-Claude-legal-cn-mcp-hub.git
 cd Codex-Claude-legal-cn-mcp-hub
 .\install.ps1
 ```
 
-完成后重启 MCP 客户端，运行 `.\verify.ps1`。
+**macOS / Linux:**
+```bash
+git clone https://github.com/laubeing-droid/Codex-Claude-legal-cn-mcp-hub.git
+cd Codex-Claude-legal-cn-mcp-hub
+bash install.sh
+```
+
+
+完成后重启 MCP 客户端，运行 验证脚本 (bash verify.sh 或 .\verify.ps1)。
 
 ## 仓库结构
 

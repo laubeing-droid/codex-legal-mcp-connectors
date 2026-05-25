@@ -1,253 +1,233 @@
 ﻿#!/usr/bin/env bash
-# install.sh — 通用安装脚本：支持 Codex Desktop / Claude Code / Claude Desktop (macOS/Linux)
+# install.sh — 安装中国法律 MCP 连接器 (macOS / Linux)
+# 用法: bash install.sh
 set -euo pipefail
 
-MY_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "${MY_DIR}/detect.sh"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/detect.sh"
 
-has_command() {
-    command -v "$1" >/dev/null 2>&1
-}
+GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; GRAY='\033[0;90m'; NC='\033[0m'
 
-echo "=== 安装中国法律 MCP 连接器 ==="
-echo ""
+echo -e "${GREEN}=== 安装中国法律 MCP 连接器 ===${NC}\n"
 
-# [1/5] 环境检测
-echo "[1/5] 检测本机 MCP 客户端环境..."
-ENVS=$(detect_environments)
-echo "$ENVS" | python3 -c "
-import json,sys
-envs=json.load(sys.stdin)
-for e in envs:
-    print(f'  [OK] {e[\"display\"]}')
-    print(f'        配置: {e[\"config\"]} ({e[\"format\"]})')
-" 2>/dev/null || echo "  [OK] Codex Desktop"
+# ─── 1. 环境检测 ──────────────────────────────────────
+echo -e "${YELLOW}[1/8] 检测本机 MCP 客户端环境...${NC}"
+active_envs=()
+while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    installed=$(env_installed "$line")
+    if [ "$installed" = "true" ]; then
+        icon="[OK]"
+        color="$GREEN"
+        active_envs+=("$line")
+    else
+        icon="[!]"
+        color="$GRAY"
+    fi
+    echo -e "  $icon $(env_display "$line")${NC}"
+    echo -e "        配置: $(env_config_path "$line") ($(env_format "$line"))${GRAY}${NC}"
+done < <(get_environment_info)
 
-# [2/5] 前置检查
-echo ""
-echo "[2/5] 前置检查..."
-NODE_OK=true
-if ! has_command node; then
-    echo "  [!!] Node.js 未安装！chineselaw 需要 Node.js >= 18"
-    echo "       下载: https://nodejs.org (LTS 版本)"
-    NODE_OK=false
-else
-    NODE_VER=$(node --version)
-    echo "  [OK] Node.js ${NODE_VER}"
+if [ ${#active_envs[@]} -eq 0 ]; then
+    echo -e "  ${YELLOW}未检测到已安装的 MCP 客户端，将至少为 Codex Desktop 创建配置。${NC}"
+    active_envs=("codex|Codex Desktop|$HOME/.codex/config.toml|toml|true|mcp_servers")
 fi
 
+# ─── 2. 前置检查 ──────────────────────────────────────
+echo ""
+echo -e "${YELLOW}[2/8] 前置检查...${NC}"
+node_ok=true
+if ! command -v node &>/dev/null; then
+    echo -e "  ${RED}[!!] Node.js 未安装！飞书 / pkulaw 需要 Node.js >= 18${NC}"
+    echo -e "  ${CYAN}       安装: brew install node (macOS) 或 https://nodejs.org${NC}"
+    node_ok=false
+else
+    node_ver=$(node --version)
+    echo -e "  ${GREEN}[OK] Node.js $node_ver${NC}"
+fi
 echo ""
 
-# [3/5] chineselaw
-echo "[3/5] chineselaw（元典智库）— 推荐，33 个工具"
-echo "   注册: https://open.chineselaw.com → API 管理 → 创建 API Key"
+# ─── 3. 元典智库 ──────────────────────────────────────
+echo -e "${CYAN}[3/8] 元典智库 — 中国法律检索（36 API + 33 MCP 工具）${NC}"
+echo -e "   注册: https://open.chineselaw.com → API 管理 → 创建 API Key${GRAY}${NC}"
+echo -e "   REST: https://open.chineselaw.com/open/{routeKey} (X-API-Key)${GRAY}${NC}"
+echo ""
+echo -e "  接入方式:${YELLOW}${NC}"
+echo -e "    [1] Streamable HTTP MCP（官方推荐，3 个细分 Server）${CYAN}${NC}"
+echo -e "    [3] 跳过${GRAY}${NC}"
+read -r -p "  请选择 (默认 1): " mode
+mode="${mode:-1}"
 
-INSTALL_CHINESELAW=false
-API_KEY="YOUR_API_KEY"
-if [ "$NODE_OK" = true ]; then
-    read -r -p "是否安装 chineselaw？(Y/n): " use_chineselaw
-    if [ "$use_chineselaw" != "n" ] && [ "$use_chineselaw" != "N" ]; then
-        INSTALL_CHINESELAW=true
-        read -r -p "  请输入 CHINESELAW_API_KEY (留空=使用占位符): " input_key
-        if [ -n "$input_key" ]; then
-            API_KEY="$input_key"
-        else
-            echo "  使用占位符，稍后手动替换"
-        fi
+if [ "$mode" != "3" ]; then
+    read -r -p "  请输入 API Key（留空=使用占位符）: " yuandian_key
+    yuandian_key="${yuandian_key:-YOUR_API_KEY}"
+    if [ "$yuandian_key" = "YOUR_API_KEY" ]; then
+        echo -e "  ${YELLOW}使用占位符，稍后手动替换${NC}"
+    fi
+
+    while IFS= read -r svc_line; do
+        [ -z "$svc_line" ] && continue
+        svc_name=$(echo "$svc_line" | cut -d'|' -f1)
+        svc_url=$(echo "$svc_line" | cut -d'|' -f2)
+        svc_display=$(echo "$svc_line" | cut -d'|' -f3)
+
+        for env_line in "${active_envs[@]}"; do
+            fmt=$(env_format "$env_line")
+            cpath=$(env_config_path "$env_line")
+            disp=$(env_display "$env_line")
+
+            if [ "$fmt" = "toml" ]; then
+                toml=$(get_yuandian_http_toml "$svc_name" "$svc_url" "$yuandian_key")
+                if write_mcp_to_codex "$cpath" "$svc_name" "$toml"; then
+                    echo -e "  ${GREEN}[添加] $disp -> $svc_name ($svc_display)${NC}"
+                else
+                    echo -e "  ${YELLOW}[跳过] $disp -> $svc_name（已存在）${NC}"
+                fi
+            else
+                json=$(get_yuandian_http_json "$svc_url" "$yuandian_key")
+                if write_mcp_to_claude "$cpath" "$svc_name" "$json"; then
+                    echo -e "  ${GREEN}[添加] $disp -> $svc_name ($svc_display)${NC}"
+                else
+                    echo -e "  ${YELLOW}[跳过] $disp -> $svc_name（已存在）${NC}"
+                fi
+            fi
+        done
+    done < <(get_yuandian_http_servers "$yuandian_key")
+else
+    echo "  跳过元典智库"
+fi
+echo ""
+
+# ─── 4. 飞书 ──────────────────────────────────────────
+echo -e "${CYAN}[4/8] 飞书 — 文档 / 审批 / 日历 / 消息${NC}"
+echo -e "   开通: https://open.feishu.cn/app → 创建应用 → 获取 App ID + App Secret${GRAY}${NC}"
+echo ""
+read -r -p "  是否安装飞书 MCP？(y/N): " install_feishu
+if [ "$install_feishu" = "y" ] || [ "$install_feishu" = "Y" ]; then
+    if [ "$node_ok" = false ]; then
+        echo -e "  ${RED}[!!] 跳过：需要 Node.js${NC}"
+    else
+        read -r -p "  请输入 App ID: " feishu_app_id
+        read -r -p "  请输入 App Secret: " feishu_app_secret
+        feishu_app_id="${feishu_app_id:-YOUR_APP_ID}"
+        feishu_app_secret="${feishu_app_secret:-YOUR_APP_SECRET}"
+
+        for env_line in "${active_envs[@]}"; do
+            fmt=$(env_format "$env_line")
+            cpath=$(env_config_path "$env_line")
+            disp=$(env_display "$env_line")
+            if [ "$fmt" = "toml" ]; then
+                toml=$(get_feishu_toml "$feishu_app_id" "$feishu_app_secret")
+                if write_mcp_to_codex "$cpath" "feishu" "$toml"; then
+                    echo -e "  ${GREEN}[添加] $disp -> feishu${NC}"
+                else
+                    echo -e "  ${YELLOW}[跳过] $disp -> feishu（已存在）${NC}"
+                fi
+            else
+                json=$(get_feishu_json "$feishu_app_id" "$feishu_app_secret")
+                if write_mcp_to_claude "$cpath" "feishu" "$json"; then
+                    echo -e "  ${GREEN}[添加] $disp -> feishu${NC}"
+                else
+                    echo -e "  ${YELLOW}[跳过] $disp -> feishu（已存在）${NC}"
+                fi
+            fi
+        done
     fi
 fi
-
-if [ "$INSTALL_CHINESELAW" = true ]; then
-    echo "$ENVS" | python3 -c "
-import json, subprocess, sys, os
-
-envs = json.load(sys.stdin)
-api_key = '${API_KEY}'
-config_paths = set()
-
-for e in envs:
-    config_path = e['config']
-    if config_path in config_paths:
-        continue
-    config_paths.add(config_path)
-    fmt = e['format']
-    display = e['display']
-
-    if fmt == 'toml':
-        toml_block = f'''
-[mcp_servers.chineselaw]
-command = \"npx\"
-startup_timeout_sec = 30
-tool_timeout_sec = 600
-enabled = true
-
-[mcp_servers.chineselaw.env]
-CHINESELAW_API_KEY = \"{api_key}\"
-'''
-        os.makedirs(os.path.dirname(config_path), exist_ok=True)
-        with open(config_path, 'a+', encoding='utf-8') as f:
-            f.seek(0)
-            content = f.read()
-            if '[mcp_servers.chineselaw]' not in content:
-                f.write('\n' + toml_block)
-                print(f'  [添加] {display} -> chineselaw')
-            else:
-                print(f'  [跳过] {display} -> chineselaw (已存在)')
-    else:
-        server_config = {
-            'command': 'npx',
-            
-            'env': {'CHINESELAW_API_KEY': api_key}
-        }
-        result = subprocess.run(['python3', '-c', f'''
-import json, os
-cp = \"\"\"{config_path}\"\"\"
-sid = \"chineselaw\"
-sc = json.loads(\"\"\"{json.dumps(server_config)}\"\"\")
-if os.path.exists(cp):
-    with open(cp, 'r', encoding='utf-8') as f:
-        try: cfg = json.load(f)
-        except: cfg = {{}}
-else:
-    cfg = {{}}
-    os.makedirs(os.path.dirname(cp), exist_ok=True)
-if 'mcpServers' not in cfg: cfg['mcpServers'] = {{}}
-if 'env' not in cfg: cfg['env'] = {{}}
-if sid in cfg['mcpServers']:
-    exit(1)
-cfg['mcpServers'][sid] = sc
-with open(cp, 'w', encoding='utf-8') as f:
-    json.dump(cfg, f, ensure_ascii=False, indent=2)
-exit(0)
-'''], capture_output=True)
-        if result.returncode == 0:
-            print(f'  [添加] {display} -> chineselaw')
-        else:
-            print(f'  [跳过] {display} -> chineselaw (已存在)')
-" 2>&1
-else
-    [ "$NODE_OK" = false ] && echo "  跳过 chineselaw（缺少 Node.js）" || echo "  跳过 chineselaw"
-fi
-
 echo ""
 
-# [4/5] 北大法宝
-echo "[4/5] 北大法宝 MCP 协议 — 10 个 HTTP 服务"
-echo "   注册: https://mcp.pkulaw.com → 开发者控制台 → 获取 Access Token"
-read -r -p "是否安装北大法宝？(Y/n): " use_pkulaw
+# ─── 5. 北大法宝 ──────────────────────────────────────
+echo -e "${CYAN}[5/8] 北大法宝 — pkulaw 系列 MCP 连接器${NC}"
+echo -e "   注册: https://mcp.pkulaw.com → 获取 Access Token${GRAY}${NC}"
+echo ""
+read -r -p "  是否安装北大法宝 MCP？(y/N): " install_pkulaw
+if [ "$install_pkulaw" = "y" ] || [ "$install_pkulaw" = "Y" ]; then
+    if [ "$node_ok" = false ]; then
+        echo -e "  ${RED}[!!] 跳过：需要 Node.js${NC}"
+    else
+        read -r -p "  请输入 Access Token: " pkulaw_token
+        pkulaw_token="${pkulaw_token:-YOUR_ACCESS_TOKEN}"
 
-if [ "$use_pkulaw" != "n" ] && [ "$use_pkulaw" != "N" ]; then
-    TOKEN="YOUR_ACCESS_TOKEN"
-    read -r -p "  请输入 Access Token (留空=使用占位符): " input_token
-    [ -n "$input_token" ] && TOKEN="$input_token" || echo "  使用占位符，稍后手动替换"
+        echo -e "  ${YELLOW}选择要安装的服务（多选，用逗号分隔，如 1,3,5）:${NC}"
+        echo "    [1] 法宝法条检索"
+        echo "    [2] 法宝法条关键词检索"
+        echo "    [3] 法宝案例语义检索"
+        echo "    [4] 法宝案例关键词检索"
+        echo "    [5] 法宝法条逐条检索"
+        echo "    [6] 法宝法条识别"
+        echo "    [7] 法宝案号识别"
+        echo "    [8] 法宝引用核验"
+        echo "    [9] 法宝超链"
+        echo "    [10] 法宝语义检索（NL-SQL）"
+        echo "    [a] 全部安装"
+        read -r -p "  请输入: " pkulaw_sel
 
-    echo "  选择要安装的服务（多选，用逗号分隔，如 1,3,5；回车=全部）:"
-    echo "    [1]  检索法律法规-语义 — 基于语义理解的法律法规检索与相关文章查找"
-    echo "    [2]  检索法律法规-关键词 — 法规标题或正文关键词精确匹配检索"
-    echo "    [3]  检索司法案例-语义 — 用自然语言描述查找相关判例"
-    echo "    [4]  检索司法案例-关键词 — 案例标题或正文关键词检索"
-    echo "    [5]  精准查找法条-关键词 — 通过法规名称与条号精确查询法条内容"
-    echo "    [6]  法条识别与溯源 — 从文本中识别法规名称与条款，返回来源链接"
-    echo "    [7]  案号识别与溯源 — 识别案号、标准化验证及与案例库溯源"
-    echo "    [8]  修正生成幻觉-法条 — 分析引用并返回权威条文，修正模型引注幻觉"
-    echo "    [9]  法宝超链 — 为文本智能添加法规超链接指向北大法宝文档"
-    echo "    [10] 法宝语义检索（NL-SQL） — 自然语言在多库中语义检索（需额外购买配置）"
-    echo "    [a]  全部安装"
-    read -r -p "  请输入: " selection
+        declare -A PKULAW_SERVICES=(
+            [1]="pkulaw-law-search|https://apim-gateway.pkulaw.com/assistant/mcp-law-search/mcp"
+            [2]="pkulaw-law-keyword|https://apim-gateway.pkulaw.com/assistant/mcp-law-keyword/mcp"
+            [3]="pkulaw-case-semantic-search|https://apim-gateway.pkulaw.com/assistant/mcp-case-search/mcp"
+            [4]="pkulaw-case-keyword|https://apim-gateway.pkulaw.com/assistant/mcp-case-keyword/mcp"
+            [5]="pkulaw-law-item-keyword|https://apim-gateway.pkulaw.com/assistant/mcp-law-item/mcp"
+            [6]="pkulaw-law-recognition|https://apim-gateway.pkulaw.com/assistant/mcp-law-recognition/mcp"
+            [7]="pkulaw-case-number-recognition|https://apim-gateway.pkulaw.com/assistant/mcp-case-recognition/mcp"
+            [8]="pkulaw-citation-validator|https://apim-gateway.pkulaw.com/assistant/mcp-citation/mcp"
+            [9]="pkulaw-doc-link|https://apim-gateway.pkulaw.com/assistant/mcp-doc-link/mcp"
+            [10]="pkulaw-semantic-nlsql|https://apim-gateway.pkulaw.com/assistant/mcp-pkulaw-search/mcp"
+        )
 
-    # PKU services array
-    SERVICES=(
-        "pkulaw-law-search|https://apim-gateway.pkulaw.com/mcp-law-search-service"
-        "pkulaw-law-keyword|https://apim-gateway.pkulaw.com/mcp-law"
-        "pkulaw-case-semantic-search|https://apim-gateway.pkulaw.com/mcp-case-search-service"
-        "pkulaw-case-keyword|https://apim-gateway.pkulaw.com/mcp-case"
-        "pkulaw-law-item-keyword|https://apim-gateway.pkulaw.com/mcp-fatiao"
-        "pkulaw-law-recognition|https://apim-gateway.pkulaw.com/law_recognition"
-        "pkulaw-case-number-recognition|https://apim-gateway.pkulaw.com/case_number_recognition"
-        "pkulaw-citation-validator|https://apim-gateway.pkulaw.com/pku_citation_validator"
-        "pkulaw-doc-link|https://apim-gateway.pkulaw.com/add-doc-link"
-        "pkulaw-semantic-nlsql|https://apim-gateway.pkulaw.com/YOUR_NL_SQL_SERVICE_ID"
-    )
+        selected=()
+        if [ "$pkulaw_sel" = "a" ] || [ "$pkulaw_sel" = "A" ] || [ -z "$pkulaw_sel" ]; then
+            selected=(1 2 3 4 5 6 7 8 9 10)
+        else
+            IFS=',' read -ra nums <<< "$pkulaw_sel"
+            for n in "${nums[@]}"; do
+                n=$(echo "$n" | xargs)
+                if [ -n "${PKULAW_SERVICES[$n]:-}" ]; then
+                    selected+=("$n")
+                fi
+            done
+        fi
 
-    is_selected() {
-        local n="$1"
-        [ -z "$selection" ] || [ "$selection" = "a" ] || [ "$selection" = "A" ] && return 0
-        echo "$selection" | tr ',' '\n' | while read -r item; do
-            [ "$(echo "$item" | tr -d ' ')" = "$n" ] && return 0
+        for idx in "${selected[@]}"; do
+            svc="${PKULAW_SERVICES[$idx]}"
+            svc_name=$(echo "$svc" | cut -d'|' -f1)
+            svc_url=$(echo "$svc" | cut -d'|' -f2)
+
+            for env_line in "${active_envs[@]}"; do
+                fmt=$(env_format "$env_line")
+                cpath=$(env_config_path "$env_line")
+                disp=$(env_display "$env_line")
+                if [ "$fmt" = "toml" ]; then
+                    toml="[mcp_servers.$svc_name]\nurl = \"$svc_url\"\nhttp_headers = { Authorization = \"Bearer $pkulaw_token\" }\nstartup_timeout_sec = 30\ntool_timeout_sec = 600\nenabled = true"
+                    if write_mcp_to_codex "$cpath" "$svc_name" "$toml"; then
+                        echo -e "  ${GREEN}[添加] $disp -> $svc_name${NC}"
+                    fi
+                else
+                    json="{\"url\":\"$svc_url\",\"headers\":{\"Authorization\":\"Bearer $pkulaw_token\"}}"
+                    if write_mcp_to_claude "$cpath" "$svc_name" "$json"; then
+                        echo -e "  ${GREEN}[添加] $disp -> $svc_name${NC}"
+                    fi
+                fi
+            done
         done
-        return 1
-    }
-
-    for i in "${!SERVICES[@]}"; do
-        idx=$((i + 1))
-        is_selected "$idx" || continue
-
-        IFS='|' read -r svc_name svc_url <<< "${SERVICES[$i]}"
-
-        # 写入所有环境
-        echo "$ENVS" | python3 -c "
-import json, sys, os
-
-envs = json.load(sys.stdin)
-svc_name = '${svc_name}'
-svc_url = '${svc_url}'
-token = '${TOKEN}'
-config_paths = set()
-
-for e in envs:
-    cp = e['config']
-    if cp in config_paths:
-        continue
-    config_paths.add(cp)
-    display = e['display']
-
-    if e['format'] == 'toml':
-        toml_block = f'''
-[mcp_servers.{svc_name}]
-url = \"{svc_url}\"
-http_headers = {{ Authorization = \"Bearer {token}\" }}
-startup_timeout_sec = 30
-tool_timeout_sec = 600
-enabled = true
-'''
-        os.makedirs(os.path.dirname(cp), exist_ok=True)
-        with open(cp, 'a+', encoding='utf-8') as f:
-            f.seek(0)
-            content = f.read()
-            if f'[mcp_servers.{svc_name}]' not in content:
-                f.write('\n' + toml_block)
-                print(f'  [添加] {display} -> {svc_name}')
-    else:
-        server_config = {
-            'url': svc_url,
-            'headers': {'Authorization': f'Bearer {token}'}
-        }
-        cfg = {{}}
-        if os.path.exists(cp):
-            with open(cp, 'r', encoding='utf-8') as f:
-                try: cfg = json.load(f)
-                except: cfg = {{}}
-        else:
-            os.makedirs(os.path.dirname(cp), exist_ok=True)
-        if 'mcpServers' not in cfg: cfg['mcpServers'] = {{}}
-        if 'env' not in cfg: cfg['env'] = {{}}
-        if svc_name not in cfg['mcpServers']:
-            cfg['mcpServers'][svc_name] = server_config
-            with open(cp, 'w', encoding='utf-8') as f:
-                json.dump(cfg, f, ensure_ascii=False, indent=2)
-            print(f'  [添加] {display} -> {svc_name}')
-" 2>&1
-    done
-else
-    echo "  跳过北大法宝"
+    fi
 fi
+echo ""
 
+# ─── 6. 完成 ──────────────────────────────────────────
+echo -e "${YELLOW}[8/8] 安装完成！${NC}"
 echo ""
-echo "安装完成！重启 MCP 客户端使配置生效。"
+echo -e "${CYAN}已配置的 MCP 客户端环境:${NC}"
+for env_line in "${active_envs[@]}"; do
+    echo -e "  - $(env_display "$env_line"): $(env_config_path "$env_line")"
+done
 echo ""
-echo "===== 后续步骤 ====="
+echo -e "${CYAN}===== 后续步骤 =====${NC}"
 echo "1. 重启对应的 MCP 客户端"
-echo "2. 运行 ./verify.sh 验证配置"
+echo "2. 运行 bash verify.sh 验证配置"
 echo "3. (如需替换凭证) 修改上述配置文件中的占位符"
 echo ""
-echo "详细指南: docs/connectors.md"
+echo "元典智库注册: https://open.chineselaw.com"
+echo "飞书开通:     https://open.feishu.cn/app"
+echo "北大法宝注册: https://mcp.pkulaw.com"
+echo "详细指南:     docs/connectors.md"
