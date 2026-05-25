@@ -1,5 +1,5 @@
-<!--
-version: 3.0.2
+﻿<!--
+version: 3.0.3
 module: mcp-hub
 status: active
 -->
@@ -20,7 +20,19 @@ Codex Desktop / Claude Code / Claude Desktop 三端通用的中国法律 MCP 连
 | **国家法规库** | Python 自托管（干净室实现） | 法规检索 | 免费无鉴权 |
 | **案例库** | Python 自托管（干净室实现） | 案例检索 | Cookie Token |
 
-可配合 [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) 获取完整法律技能工作流，亦可单独安装。
+## 配套项目
+
+| 仓库 | 说明 |
+|------|------|
+| [core-codices](https://github.com/laubeing-droid/codex-claude-legal-cn-core-codices) | 📚 法律数据库 — 162 部中国法律全文 JSON（v0.2-beta） |
+| [codex-claude-legal-cn-main](https://github.com/laubeing-droid/codex-claude-legal-cn-main) | ⚖️ 法律技能集 — 150+ 子技能覆盖全文书工作流 |
+| [Judgment-Predictor](https://github.com/laubeing-droid/Codex-Legal-CN-Judgment-Predictor) | 🏛️ AI 裁判预测框架 |
+| [中美语义对齐](https://github.com/laubeing-droid/PRC-US-Legal-Semantic-Alignment-Framework) | 🌐 中美法律语义对齐框架 |
+
+> 建议将 core-codices 作为 submodule 引入，离线检索全部法条：
+> ```bash
+> git submodule add https://github.com/laubeing-droid/codex-claude-legal-cn-core-codices.git legal-cn-data
+> ```
 
 ## 快速开始
 
@@ -39,8 +51,7 @@ cd Codex-Claude-legal-cn-mcp-hub
 bash install.sh
 ```
 
-
-完成后重启 MCP 客户端，运行 验证脚本 (bash verify.sh 或 .\verify.ps1)。
+完成后重启 MCP 客户端，运行验证脚本 (`bash verify.sh` 或 `.\verify.ps1`)。
 
 ## 仓库结构
 
@@ -68,23 +79,6 @@ bash install.sh
 | **Claude Code** | `~/.claude/settings.json` | JSON |
 | **Claude Desktop**（Win） | `%APPDATA%/Claude/claude_desktop_config.json` | JSON |
 | **Claude Desktop**（Mac） | `~/Library/Application Support/Claude/claude_desktop_config.json` | JSON |
-
-## 配套项目
-
-> **法律数据库**: 本项目配合 [codex-claude-legal-cn-core-codices](https://github.com/laubeing-droid/codex-claude-legal-cn-core-codices) 使用（162部中国法律全文JSON）。
-> 
-> ```bash
-> git submodule add https://github.com/laubeing-droid/codex-claude-legal-cn-core-codices.git legal-cn-data
-> ```
-> 即可在本地离线检索全部法条，无需API。
-
-## 配套项目
-
-| 仓库 | 说明 |
-|------|------|
-| [Claude-for-Legal-CN-to-Codex](https://github.com/laubeing-droid/Claude-for-Legal-CN-to-Codex) | 上游主仓库：中国法律技能 + MCP 集成 |
-| [Codex-Legal-CN-Judgment-Predictor](https://github.com/laubeing-droid/Codex-Legal-CN-Judgment-Predictor) | AI 裁判预测框架 |
-| [PRC-US-Legal-Semantic-Alignment-Framework](https://github.com/laubeing-droid/PRC-US-Legal-Semantic-Alignment-Framework) | 中美法律语义对齐框架 |
 
 ## 许可证
 
